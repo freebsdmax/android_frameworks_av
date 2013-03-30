@@ -100,7 +100,8 @@ LOCAL_C_INCLUDES:= \
         $(TOP)/external/openssl/include \
         $(TOP)/hardware/qcom/display/libgralloc \
         $(TOP)/hardware/qcom/media/mm-core/inc \
-        $(TOP)/system/core/include
+        $(TOP)/system/core/include \
+	$(TOP)/external/ffmpeg-dev/ \
 
 LOCAL_SHARED_LIBRARIES := \
         libbinder \
@@ -132,8 +133,16 @@ LOCAL_STATIC_LIBRARIES := \
         libstagefright_timedtext \
         libvpx \
         libstagefright_mpeg2ts \
-        libstagefright_id3 \
+        libstagefright_ffmpeg \
+	libstagefright_id3 \
         libFLAC \
+
+
+ifeq ($(BOARD_USES_FFMPEG),true)
+LOCAL_C_INCLUDES+= $(TOP)/external/ffmpeg-dev/
+LOCAL_STATIC_LIBRARIES	+= libstagefright_ffmpeg
+LOCAL_CFLAGS += -DBOARD_USES_FFMPEG
+endif
 
 ifeq ($(CEDARX_DEBUG_FRAMEWORK),S)
 LOCAL_STATIC_LIBRARIES += libstagefright_httplive_opt

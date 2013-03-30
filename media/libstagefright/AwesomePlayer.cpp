@@ -64,6 +64,11 @@ Copyright (c) 2012, Code Aurora Forum. All rights reserved.
 
 #include <cutils/properties.h>
 
+#ifdef BOARD_USES_FFMPEG
+#include "ffmpeg/ff_extractor.h"
+#include <media/stagefright/FFmpegSource.h>
+#endif
+
 #define USE_SURFACE_ALLOC 1
 #define FRAME_DROP_FREQ 0
 
@@ -360,7 +365,20 @@ status_t AwesomePlayer::setDataSource(
 
     reset_l();
 
-    sp<DataSource> dataSource = new FileSource(fd, offset, length);
+       sp<DataSource> dataSource;
+
+#ifdef BOARD_USES_FFMPEG
+    sp<DataSource> dataSource1 = new FFmpegSource(fd, offset, length);
+
+    if( dataSource1->ff_ptr != NULL )
+		dataSource = dataSource1;
+    else {
+        dataSource = new FileSource(fd, offset, length);
+        dataSource->ff_ptr = 0;
+	}
+#else
+	dataSource = new FileSource(fd, offset, length);
+#endif
 
     status_t err = dataSource->initCheck();
 

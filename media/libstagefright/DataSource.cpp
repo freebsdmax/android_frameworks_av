@@ -33,6 +33,7 @@
 #include "include/FLACExtractor.h"
 #include "include/AACExtractor.h"
 #include "include/WVMExtractor.h"
+//#include "include/AVIExtractor.h"
 #include "include/ExtendedExtractor.h"
 
 #include "matroska/MatroskaExtractor.h"
@@ -47,6 +48,10 @@
 #include <utils/String8.h>
 
 #include <cutils/properties.h>
+
+#ifdef BOARD_USES_FFMPEG
+#include "ffmpeg/ff_extractor.h"
+#endif
 
 namespace android {
 
@@ -92,6 +97,24 @@ bool DataSource::sniff(
     *confidence = 0.0f;
     meta->clear();
     Mutex::Autolock autoLock(gSnifferMutex);
+
+#ifdef BOARD_USES_FFMPEG
+    if( ff_ptr != 0 ) {
+        String8 newMimeType;
+        float newConfidence;
+        sp<AMessage> newMeta;
+        if (SniffFFmpeg(this, &newMimeType, &newConfidence, &newMeta)) {
+            if (newConfidence > *confidence) {
+                *mimeType = newMimeType;
+                *confidence = newConfidence;
+                *meta = newMeta;
+            }
+        }
+
+		return *confidence > 0.0;
+    }
+#endif
+
     for (List<SnifferFunc>::iterator it = gSniffers.begin();
          it != gSniffers.end(); ++it) {
 
@@ -100,6 +123,8 @@ bool DataSource::sniff(
         if(it == extendedSnifferPosition)
             continue;
 #endif
+
+
 
         String8 newMimeType;
         float newConfidence = 0.0;
@@ -177,6 +202,7 @@ void DataSource::RegisterDefaultSniffers() {
     RegisterSniffer(SniffMP3);
     RegisterSniffer(SniffAAC);
     RegisterSniffer(SniffMPEG2PS);
+//	RegisterSniffer(SniffAVI);
     //RegisterSniffer(SniffWVM); //disable currently
 #ifdef QCOM_HARDWARE
     ExtendedExtractor::RegisterSniffers();

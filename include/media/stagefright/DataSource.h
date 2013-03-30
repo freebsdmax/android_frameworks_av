@@ -98,6 +98,12 @@ public:
 
     virtual String8 getMIMEType() const;
 
+    void *ff_ptr;
+    int  ff_ex1;
+    int  ff_ex2;
+    int  ff_ex3;
+    int  ff_ex4;
+
 protected:
     virtual ~DataSource() {}
 

@@ -30,7 +30,12 @@
 #include "include/WVMExtractor.h"
 #include "include/FLACExtractor.h"
 #include "include/AACExtractor.h"
+//#include "include/AVIExtractor.h"
 #include "include/ExtendedExtractor.h"
+
+#ifdef BOARD_USES_FFMPEG
+#include "ffmpeg/ff_extractor.h"
+#endif
 
 #include "matroska/MatroskaExtractor.h"
 
@@ -93,8 +98,15 @@ sp<MediaExtractor> MediaExtractor::Create(
     }
 
     MediaExtractor *ret = NULL;
+#ifdef BOARD_USES_FFMPEG
+    if( source->ff_ptr ){
+        ret = new FFExtractor(source);
+    } else if (!strcasecmp(mime, MEDIA_MIMETYPE_CONTAINER_MPEG4)
+            || !strcasecmp(mime, "audio/mp4")) {
+#else
     if (!strcasecmp(mime, MEDIA_MIMETYPE_CONTAINER_MPEG4)
             || !strcasecmp(mime, "audio/mp4")) {
+#endif
         ret = new MPEG4Extractor(source);
     } else if (!strcasecmp(mime, MEDIA_MIMETYPE_AUDIO_MPEG)) {
         ret = new MP3Extractor(source, meta);
@@ -118,6 +130,8 @@ sp<MediaExtractor> MediaExtractor::Create(
         ret = new AACExtractor(source, meta);
     } else if (!strcasecmp(mime, MEDIA_MIMETYPE_CONTAINER_MPEG2PS)) {
         ret = new MPEG2PSExtractor(source);
+//    } else if (!strcasecmp(mime, MEDIA_MIMETYPE_CONTAINER_AVI)) {
+//        ret = new AVIExtractor(source);
     }
 
     if (ret != NULL) {

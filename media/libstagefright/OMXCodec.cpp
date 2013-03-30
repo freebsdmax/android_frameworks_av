@@ -597,7 +597,7 @@ status_t OMXCodec::configureCodec(const sp<MetaData> &meta) {
 
         if (meta->findData(kKeyESDS, &type, &data, &size)) {
             ESDS esds((const char *)data, size);
-            CHECK_EQ(esds.InitCheck(), (status_t)OK);
+            //CHECK_EQ(esds.InitCheck(), (status_t)OK);
 
             const void *codec_specific_data;
             size_t codec_specific_data_size;

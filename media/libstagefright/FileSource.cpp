@@ -33,7 +33,9 @@ FileSource::FileSource(const char *filename)
       mDrmBufOffset(0),
       mDrmBufSize(0),
       mDrmBuf(NULL){
-
+#ifdef BOARD_USES_FFMPEG
+	  ff_ptr = 0;
+#endif
     mFd = open(filename, O_LARGEFILE | O_RDONLY);
 
     if (mFd >= 0) {
@@ -54,6 +56,9 @@ FileSource::FileSource(int fd, int64_t offset, int64_t length)
       mDrmBuf(NULL){
     CHECK(offset >= 0);
     CHECK(length >= 0);
+#ifdef BOARD_USES_FFMPEG
+	  ff_ptr = 0;
+#endif
 }
 
 FileSource::~FileSource() {

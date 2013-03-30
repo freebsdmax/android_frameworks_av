@@ -17,7 +17,6 @@
 //#define LOG_NDEBUG 0
 #define LOG_TAG "CedarXAudioPlayer"
 #include <CDX_Debug.h>
-
 #include <binder/IPCThreadState.h>
 #include <media/AudioTrack.h>
 #include <media/stagefright/foundation/ADebug.h>
