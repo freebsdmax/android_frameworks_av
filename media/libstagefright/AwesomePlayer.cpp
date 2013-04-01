@@ -64,10 +64,10 @@ Copyright (c) 2012, Code Aurora Forum. All rights reserved.
 
 #include <cutils/properties.h>
 
-#ifdef BOARD_USES_FFMPEG
-#include "ffmpeg/ff_extractor.h"
-#include <media/stagefright/FFmpegSource.h>
-#endif
+//#ifdef BOARD_USES_FFMPEG
+//#include "ffmpeg/ff_extractor.h"
+//#include <media/stagefright/FFmpegSource.h>
+//#endif
 
 #define USE_SURFACE_ALLOC 1
 #define FRAME_DROP_FREQ 0
@@ -367,9 +367,29 @@ status_t AwesomePlayer::setDataSource(
 
        sp<DataSource> dataSource;
 
-#ifdef BOARD_USES_FFMPEG
-    sp<DataSource> dataSource1 = new FFmpegSource(fd, offset, length);
+//#ifdef BOARD_USES_FFMPEG
+//    sp<DataSource> dataSource1 = new FFmpegSource(fd, offset, length);
+//
+//    if( dataSource1->ff_ptr != NULL )
+//		dataSource = dataSource1;
+//    else {
+//        dataSource = new FileSource(fd, offset, length);
+//        dataSource->ff_ptr = 0;
+//	}
+//#else
+	dataSource = new FileSource(fd, offset, length);
+//#endif
 
+
+#ifdef LIBPEONY_ENABLE
+    void *libHandle = dlopen("libpeony_demuxer.so", RTLD_NOW);
+    if (libHandle == NULL) { ALOGE("unable to dlopen libpeony_demuxer.so"); return UNKNOWN_ERROR; }
+    typedef DataSource *(*create_DataSource)(int, int64_t, int64_t);
+    create_DataSource create_DataSource_func = (create_DataSource)dlsym(libHandle, "_Z20create_DataSource_fdixx");
+    if (create_DataSource_func == NULL) { ALOGE("unable to dlsym create_DataSource"); dlclose(libHandle); libHandle = NULL; return UNKNOWN_ERROR; }
+
+    sp<DataSource> dataSource1 = create_DataSource_func(fd, offset, length);
+//    fprintf("========what========");
     if( dataSource1->ff_ptr != NULL )
 		dataSource = dataSource1;
     else {
@@ -2540,7 +2560,24 @@ status_t AwesomePlayer::finishSetDataSource_l() {
             }
         }
     } else {
+#ifdef LIBPEONY_ENABLE
+        void *libHandle = dlopen("libpeony_demuxer.so", RTLD_NOW);
+        if (libHandle == NULL) { ALOGE("unable to dlopen libpeony_demuxer.so"); return UNKNOWN_ERROR; }
+        typedef DataSource *(*create_DataSource)(const char *);
+        create_DataSource create_DataSource_func = (create_DataSource)dlsym(libHandle, "_Z21create_DataSource_urlPKc");
+        if (create_DataSource_func == NULL) { ALOGE("unable to dlsym create_DataSource"); dlclose(libHandle); libHandle = NULL; return UNKNOWN_ERROR; }
+
+        sp<DataSource> dataSource1 = create_DataSource_func(mUri.string());
+    
+    if( dataSource1->ff_ptr != NULL )
+		dataSource = dataSource1;
+    else {
         dataSource = DataSource::CreateFromURI(mUri.string(), &mUriHeaders);
+        dataSource->ff_ptr = 0;
+	}
+#else
+        dataSource = DataSource::CreateFromURI(mUri.string(), &mUriHeaders);
+#endif
     }
 
     if (dataSource == NULL) {

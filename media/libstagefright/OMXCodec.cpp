@@ -50,6 +50,10 @@ Copyright (c) 2012, Code Aurora Forum. All rights reserved.
 
 #include "include/avc_utils.h"
 
+#ifdef LIBPEONY_ENABLE
+#include "libpeony_omx.h"
+#endif
+
 #ifdef QCOM_HARDWARE
 #include <gralloc_priv.h>
 #include <QOMX_AudioExtensions.h>
@@ -778,6 +782,31 @@ status_t OMXCodec::configureCodec(const sp<MetaData> &meta) {
             if (err != OK) {
                 return err;
             }
+
+#ifdef LIBPEONY_ENABLE
+            if (!strcasecmp("video/libpeony", mMIME) )
+            {
+                status_t err;
+                OMX_VIDEO_PARAM_PEONY profile;
+                InitOMXParams(&profile);
+
+            	profile.nPortIndex = kPortIndexInput;
+                CHECK(meta->findInt32('fv01', (int32_t*)&(profile.ffmpeg_codec_id)));
+                CHECK(meta->findInt32(kKeyWidth, (int32_t*)&(profile.v_s_res_x)));
+                CHECK(meta->findInt32(kKeyHeight, (int32_t*)&(profile.v_s_res_y)));
+                CHECK(meta->findInt32('fv04', (int32_t*)&(profile.ffmpeg_codec_tag)));
+                CHECK(meta->findInt32('fv05', (int32_t*)&(profile.ffmpeg_stream_codec_tag)));
+                CHECK(meta->findInt32('fv06', (int32_t*)&(profile.ffmpeg_extra_size)));
+                CHECK(meta->findInt32('fv07', (int32_t*)&(profile.ffmpeg_extra_data_ptr)));
+                
+                err = mOMX->setParameter(mNode, (OMX_INDEXTYPE)(OMX_IndexMax-1), &profile, sizeof(profile));
+            if (err != OK) {
+                    CODEC_LOGE("setParameter('OMX_IndexParamFFoaVideo') failed (err = %d)", err);
+                return err;
+            }
+        }
+#endif
+
 #ifdef QCOM_HARDWARE
             if (mUseArbitraryMode) {
                 CODEC_LOGI("Decoder should be in arbitrary mode");
@@ -816,6 +845,34 @@ status_t OMXCodec::configureCodec(const sp<MetaData> &meta) {
 #endif
         }
     }
+
+#ifdef LIBPEONY_ENABLE
+    if (!strcasecmp("audio/libpeony", mMIME) )
+    {
+        status_t err;
+        OMX_AUDIO_PARAM_PEONY profile;
+        InitOMXParams(&profile);
+	    profile.nPortIndex = kPortIndexInput;
+
+        CHECK(meta->findInt32('fa01', (int32_t*)&(profile.ffmpeg_codec_id)));
+        CHECK(meta->findInt32(kKeyChannelCount, (int32_t*)&(profile.a_chs)));
+        CHECK(meta->findInt32('fa03', (int32_t*)&(profile.a_req_chs)));
+        CHECK(meta->findInt32('fa04', (int32_t*)&(profile.a_bit_fmt)));
+        CHECK(meta->findInt32('fa05', (int32_t*)&(profile.a_bits)));
+        CHECK(meta->findInt32(kKeySampleRate, (int32_t*)&(profile.a_s_rate)));
+        CHECK(meta->findInt32('fa07', (int32_t*)&(profile.a_frame_size)));
+        CHECK(meta->findInt32('fa08', (int32_t*)&(profile.ffmpeg_codec_tag)));
+        CHECK(meta->findInt32('fa09', (int32_t*)&(profile.ffmpeg_stream_codec_tag)));
+        CHECK(meta->findInt32('fa10', (int32_t*)&(profile.ffmpeg_extra_size)));
+        CHECK(meta->findInt32('fa11', (int32_t*)&(profile.ffmpeg_extra_data_ptr)));
+
+        err = mOMX->setParameter(mNode, (OMX_INDEXTYPE)(OMX_IndexMax-2), &profile, sizeof(profile));
+        if (err != OK) {
+            CODEC_LOGE("setParameter('OMX_IndexParamAudioFadec') failed (err = %d)", err);
+            return err;
+        }
+    }
+#endif
 
     int32_t maxInputSize;
     if (meta->findInt32(kKeyMaxInputSize, &maxInputSize)) {
@@ -1534,6 +1591,11 @@ status_t OMXCodec::setVideoOutputFormat(
     CODEC_LOGV("setVideoOutputFormat width=%ld, height=%ld", width, height);
 
     OMX_VIDEO_CODINGTYPE compressionFormat = OMX_VIDEO_CodingUnused;
+#ifdef LIBPEONY_ENABLE
+    if (!strcasecmp("video/libpeony", mime)) {
+        compressionFormat = OMX_VIDEO_CodingAutoDetect;
+    } else 
+#endif
     if (!strcasecmp(MEDIA_MIMETYPE_VIDEO_AVC, mime)) {
         compressionFormat = OMX_VIDEO_CodingAVC;
     } else if (!strcasecmp(MEDIA_MIMETYPE_VIDEO_MPEG4, mime)) {
@@ -1741,6 +1803,12 @@ void OMXCodec::setComponentRole(
     };
 
     static const MimeToRole kMimeToRole[] = {
+#ifdef LIBPEONY_ENABLE
+        { "video/libpeony",
+            "video_decoder.libpeony", "video_decoder.libpeony" },
+        { "audio/libpeony",
+            "audio_decoder.libpeony", "audio_encoder.libpeony" },
+#endif
         { MEDIA_MIMETYPE_AUDIO_MPEG,
             "audio_decoder.mp3", "audio_encoder.mp3" },
         { MEDIA_MIMETYPE_AUDIO_MPEG_LAYER_I,

@@ -33,9 +33,9 @@
 //#include "include/AVIExtractor.h"
 #include "include/ExtendedExtractor.h"
 
-#ifdef BOARD_USES_FFMPEG
-#include "ffmpeg/ff_extractor.h"
-#endif
+//#ifdef BOARD_USES_FFMPEG
+//#include "ffmpeg/ff_extractor.h"
+//#endif
 
 #include "matroska/MatroskaExtractor.h"
 
@@ -45,6 +45,10 @@
 #include <media/stagefright/MediaExtractor.h>
 #include <media/stagefright/MetaData.h>
 #include <utils/String8.h>
+
+#ifdef LIBPEONY_ENABLE
+#include <dlfcn.h>
+#endif
 
 namespace android {
 
@@ -98,15 +102,20 @@ sp<MediaExtractor> MediaExtractor::Create(
     }
 
     MediaExtractor *ret = NULL;
-#ifdef BOARD_USES_FFMPEG
+#ifdef LIBPEONY_ENABLE
     if( source->ff_ptr ){
-        ret = new FFExtractor(source);
-    } else if (!strcasecmp(mime, MEDIA_MIMETYPE_CONTAINER_MPEG4)
-            || !strcasecmp(mime, "audio/mp4")) {
-#else
+        void *libHandle = dlopen("libpeony_demuxer.so", RTLD_NOW);
+        if (libHandle == NULL) { ALOGE("unable to dlopen libpeony_demuxer.so"); return false; }
+        typedef MediaExtractor *(*create_ext_func)(const sp<DataSource> &source);
+        create_ext_func ext_func = (create_ext_func)dlsym(libHandle, 
+        "_ZN7android21create_MediaExtractorERKNS_2spINS_10DataSourceEEE");
+        if (ext_func == NULL) { ALOGE("unable to dlsym ext_func"); dlclose(libHandle); libHandle = NULL; return false; }
+        ret = (*ext_func)(source);
+    } else 
+#endif
     if (!strcasecmp(mime, MEDIA_MIMETYPE_CONTAINER_MPEG4)
             || !strcasecmp(mime, "audio/mp4")) {
-#endif
+//#endif
         ret = new MPEG4Extractor(source);
     } else if (!strcasecmp(mime, MEDIA_MIMETYPE_AUDIO_MPEG)) {
         ret = new MP3Extractor(source, meta);

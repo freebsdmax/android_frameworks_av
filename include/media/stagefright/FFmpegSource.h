@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2012	The FFMPEG for Android Open Source Project
- *						InSignal Co., Ltd.
+ * Copyright (C) 2009 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +38,7 @@ public:
 
     virtual status_t getSize(off64_t *size);
 
-    virtual sp<DecryptHandle> DrmInitialization(const char *mime);
+    virtual sp<DecryptHandle> DrmInitialization();
 
     virtual void getDrmInfo(sp<DecryptHandle> &handle, DrmManagerClient **client);
 

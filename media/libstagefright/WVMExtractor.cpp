@@ -59,8 +59,7 @@ WVMExtractor::WVMExtractor(const sp<DataSource> &source)
                 "_ZN7android11GetInstanceENS_2spINS_10DataSourceEEE");
 
     if (getInstanceFunc) {
-        if (source->DrmInitialization(
-                MEDIA_MIMETYPE_CONTAINER_WVM) != NULL) {
+        if (source->DrmInitialization() != NULL) {
             mImpl = (*getInstanceFunc)(source);
             CHECK(mImpl != NULL);
             setDrmFlag(true);

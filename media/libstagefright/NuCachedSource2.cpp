@@ -647,7 +647,7 @@ void NuCachedSource2::resumeFetchingIfNecessary() {
 }
 
 sp<DecryptHandle> NuCachedSource2::DrmInitialization(const char* mime) {
-    return mSource->DrmInitialization(mime);
+    return mSource->DrmInitialization();
 }
 
 void NuCachedSource2::getDrmInfo(sp<DecryptHandle> &handle, DrmManagerClient **client) {

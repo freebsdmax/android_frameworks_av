@@ -34,29 +34,30 @@ static const struct {
     const char *mRole;
 
 } kComponents[] = {
-    { "OMX.google.aac.decoder", "stagefright_soft_aacdec", "audio_decoder.aac" },
-    { "OMX.google.aac.encoder", "stagefright_soft_aacenc", "audio_encoder.aac" },
-    { "OMX.google.amrnb.decoder", "stagefright_soft_amrdec", "audio_decoder.amrnb" },
-    { "OMX.google.amrnb.encoder", "stagefright_soft_amrnbenc", "audio_encoder.amrnb" },
-    { "OMX.google.amrwb.decoder", "stagefright_soft_amrdec", "audio_decoder.amrwb" },
-    { "OMX.google.amrwb.encoder", "stagefright_soft_amrwbenc", "audio_encoder.amrwb" },
-    { "OMX.google.h264.decoder", "stagefright_soft_cedar_h264dec", "video_decoder.avc" },
+#ifdef LIBPEONY_ENABLE
+    { "OMX.google.libpeony.decoder.video", "libpeony_ffmpeg_video", "video_decoder.libpeony" },
+    { "OMX.google.libpeony.decoder.audio", "libpeony_ffmpeg_audio", "audio_decoder.libpeony" },
+#endif
+    { "OMX.google.aac.decoder", "aacdec", "audio_decoder.aac" },
+    { "OMX.google.aac.encoder", "aacenc", "audio_encoder.aac" },
+    { "OMX.google.amrnb.decoder", "amrdec", "audio_decoder.amrnb" },
+    { "OMX.google.amrnb.encoder", "amrnbenc", "audio_encoder.amrnb" },
+    { "OMX.google.amrwb.decoder", "amrdec", "audio_decoder.amrwb" },
+    { "OMX.google.amrwb.encoder", "amrwbenc", "audio_encoder.amrwb" },
+    { "OMX.google.h264.decoder", "cedar_h264dec", "video_decoder.avc" },
 //    { "OMX.google.h264.decoder", "h264dec", "video_decoder.avc" },
-    { "OMX.google.h264.encoder", "stagefright_soft_h264enc", "video_encoder.avc" },
-    { "OMX.google.g711.alaw.decoder", "stagefright_soft_g711dec", "audio_decoder.g711alaw" },
-    { "OMX.google.g711.mlaw.decoder", "stagefright_soft_g711dec", "audio_decoder.g711mlaw" },
-    { "OMX.google.h263.decoder", "stagefright_soft_mpeg4dec", "video_decoder.h263" },
-    { "OMX.google.h263.encoder", "stagefright_soft_mpeg4enc", "video_encoder.h263" },
-    { "OMX.google.mpeg4.decoder", "stagefright_soft_mpeg4dec", "video_decoder.mpeg4" },
-    { "OMX.cedar.mpeg4.decoder", "CedarX", "video_decoder.mpeg4" },
-    { "OMX.google.mpeg4.encoder", "stagefright_soft_mpeg4enc", "video_encoder.mpeg4" },
-    { "OMX.google.mp3.decoder", "stagefright_soft_mp3dec", "audio_decoder.mp3" },
-    { "OMX.cedar.mp3.decoder", "CedarA", "audio_decoder.mp3" },
-    { "OMX.google.vorbis.decoder", "stagefright_soft_vorbisdec", "audio_decoder.vorbis" },
-    { "OMX.cedar.vorbis.decoder", "CedarX", "audio_decoder.vorbis" },
-    { "OMX.google.vpx.decoder", "stagefright_soft_vpxdec", "video_decoder.vpx" },
-    { "OMX.google.raw.decoder", "stagefright_soft_rawdec", "audio_decoder.raw" },
-    { "OMX.google.flac.encoder", "stagefright_soft_flacenc", "audio_encoder.flac" },
+    { "OMX.google.h264.encoder", "h264enc", "video_encoder.avc" },
+    { "OMX.google.g711.alaw.decoder", "g711dec", "audio_decoder.g711alaw" },
+    { "OMX.google.g711.mlaw.decoder", "g711dec", "audio_decoder.g711mlaw" },
+    { "OMX.google.h263.decoder", "mpeg4dec", "video_decoder.h263" },
+    { "OMX.google.h263.encoder", "mpeg4enc", "video_encoder.h263" },
+    { "OMX.google.mpeg4.decoder", "mpeg4dec", "video_decoder.mpeg4" },
+    { "OMX.google.mpeg4.encoder", "mpeg4enc", "video_encoder.mpeg4" },
+    { "OMX.google.mp3.decoder", "mp3dec", "audio_decoder.mp3" },
+    { "OMX.google.vorbis.decoder", "vorbisdec", "audio_decoder.vorbis" },
+    { "OMX.google.vpx.decoder", "vpxdec", "video_decoder.vpx" },
+    { "OMX.google.raw.decoder", "rawdec", "audio_decoder.raw" },
+    { "OMX.google.flac.encoder", "flacenc", "audio_encoder.flac" },
 };
 
 static const size_t kNumComponents =
@@ -77,7 +78,7 @@ OMX_ERRORTYPE SoftOMXPlugin::makeComponentInstance(
             continue;
         }
 
-        AString libName = "lib";
+        AString libName = "libstagefright_soft_";
         libName.append(kComponents[i].mLibNameSuffix);
         libName.append(".so");
 

@@ -49,8 +49,12 @@
 
 #include <cutils/properties.h>
 
-#ifdef BOARD_USES_FFMPEG
-#include "ffmpeg/ff_extractor.h"
+//#ifdef BOARD_USES_FFMPEG
+//#include "ffmpeg/ff_extractor.h"
+//#endif
+
+#ifdef LIBPEONY_ENABLE
+#include <dlfcn.h>
 #endif
 
 namespace android {
@@ -97,13 +101,21 @@ bool DataSource::sniff(
     *confidence = 0.0f;
     meta->clear();
     Mutex::Autolock autoLock(gSnifferMutex);
-
-#ifdef BOARD_USES_FFMPEG
+    	
+#ifdef LIBPEONY_ENABLE
     if( ff_ptr != 0 ) {
         String8 newMimeType;
         float newConfidence;
         sp<AMessage> newMeta;
-        if (SniffFFmpeg(this, &newMimeType, &newConfidence, &newMeta)) {
+        
+        void *libHandle = dlopen("libpeony_demuxer.so", RTLD_NOW);
+        if (libHandle == NULL) { ALOGE("unable to dlopen libpeony_demuxer.so"); return false; }
+        typedef bool *(*create_sniff_func)(const sp<DataSource> &source, String8 *mimeType, float *confidence, sp<AMessage> *meta);
+        create_sniff_func sniff_func = (create_sniff_func)dlsym(libHandle, 
+        "_ZN7android11SniffFFmpegERKNS_2spINS_10DataSourceEEEPNS_7String8EPfPNS0_INS_8AMessageEEE");
+        if (sniff_func == NULL) { ALOGE("unable to dlsym SniffFFmpeg"); dlclose(libHandle); libHandle = NULL; return false; }
+              
+        if ((*sniff_func)(this, &newMimeType, &newConfidence, &newMeta)) {
             if (newConfidence > *confidence) {
                 *mimeType = newMimeType;
                 *confidence = newConfidence;
@@ -113,7 +125,26 @@ bool DataSource::sniff(
 
 		return *confidence > 0.0;
     }
+    else
 #endif
+
+
+//#ifdef BOARD_USES_FFMPEG
+//    if( ff_ptr != 0 ) {
+//        String8 newMimeType;
+//      float newConfidence;
+//      sp<AMessage> newMeta;
+//      if (SniffFFmpeg(this, &newMimeType, &newConfidence, &newMeta)) {
+//          if (newConfidence > *confidence) {
+//              *mimeType = newMimeType;
+//              *confidence = newConfidence;
+//              *meta = newMeta;
+//          }
+//      }
+//
+//return *confidence > 0.0;
+//  }
+//ndif
 
     for (List<SnifferFunc>::iterator it = gSniffers.begin();
          it != gSniffers.end(); ++it) {
@@ -170,7 +201,7 @@ bool DataSource::sniff(
 }
 
 // static
-void DataSource::RegisterSniffer(SnifferFunc func, bool isExtendedExtractor) {
+void DataSource::RegisterSniffer(SnifferFunc func) {
     Mutex::Autolock autoLock(gSnifferMutex);
 
     for (List<SnifferFunc>::iterator it = gSniffers.begin();

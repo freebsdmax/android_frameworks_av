@@ -34,6 +34,10 @@ static const struct {
     const char *mRole;
 
 } kComponents[] = {
+#ifdef LIBPEONY_ENABLE
+    { "OMX.google.libpeony.decoder.video", "libpeony_ffmpeg_video", "video_decoder.libpeony" },
+    { "OMX.google.libpeony.decoder.audio", "libpeony_ffmpeg_audio", "audio_decoder.libpeony" },
+#endif
     { "OMX.google.aac.decoder", "stagefright_soft_aacdec", "audio_decoder.aac" },
     { "OMX.google.aac.encoder", "stagefright_soft_aacenc", "audio_encoder.aac" },
     { "OMX.google.amrnb.decoder", "stagefright_soft_amrdec", "audio_decoder.amrnb" },
@@ -50,7 +54,6 @@ static const struct {
     { "OMX.google.mpeg4.decoder", "stagefright_soft_mpeg4dec", "video_decoder.mpeg4" },
     { "OMX.google.mpeg4.encoder", "stagefright_soft_mpeg4enc", "video_encoder.mpeg4" },
     { "OMX.google.mp3.decoder", "stagefright_soft_mp3dec", "audio_decoder.mp3" },
-    { "OMX.cedar.mp3.decoder", "aw_audio", "audio_decoder.mp3" },
     { "OMX.google.vorbis.decoder", "stagefright_soft_vorbisdec", "audio_decoder.vorbis" },
     { "OMX.google.vpx.decoder", "stagefright_soft_vpxdec", "video_decoder.vpx" },
     { "OMX.google.raw.decoder", "stagefright_soft_rawdec", "audio_decoder.raw" },

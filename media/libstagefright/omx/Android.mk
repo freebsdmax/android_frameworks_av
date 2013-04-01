@@ -23,6 +23,10 @@ LOCAL_SHARED_LIBRARIES :=               \
         libstagefright_foundation       \
         libdl
 
+ifeq ($(BOARD_USES_LIBPEONY),true)
+LOCAL_CFLAGS += -DLIBPEONY_ENABLE
+endif
+
 LOCAL_MODULE:= libstagefright_omx
 
 include $(BUILD_SHARED_LIBRARY)
